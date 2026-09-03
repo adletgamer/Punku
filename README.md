@@ -41,7 +41,7 @@ Punku no es una app de contabilidad, ni un chatbot, ni un marketplace. Es la cap
 - **Animaciones:** Motion (`motion/react`) - Animaciones orquestadas y sutiles.
 - **Estado/Data:** `lib/demo-profile.ts` (Mock data para el MVP).
 
-### Sistema de Diseño (Anti AI-Slop)
+### Sistema de Diseño 
 Hemos definido una paleta cálida y terrosa para evitar el look genérico de "SaaS púrpura con gradientes". 
 
 | Token | Color | Uso |
@@ -58,7 +58,7 @@ Hemos definido una paleta cálida y terrosa para evitar el look genérico de "Sa
 
 ---
 
-## 🎨 El Prototipo (MVP de 48h)
+## 🎨 El Prototipo 
 
 **Enfoque:** El corazón del prototipo es la **Pantalla de Perfil de Crecimiento**, mostrada con data mockeada para que el jurado vea el desbloqueo real: el Dossier exportable.
 
