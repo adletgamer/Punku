@@ -2,7 +2,22 @@
 
 **Tu negocio ya tiene historia. Vamos a hacerla visible.**
 
+[![Ver el prototipo en vivo](https://img.shields.io/badge/Ver%20el%20prototipo%20en%20vivo-punku--ideathon.vercel.app-b22c3f?style=for-the-badge)](https://punku-ideathon.vercel.app)
+
+### 👉 [punku-ideathon.vercel.app](https://punku-ideathon.vercel.app)
+
 Punku convierte la actividad diaria de una microempresaria informal en una **Identidad Económica Portable** que le abre puertas a crédito, proveedores y clientes. La IA es invisible: ella nunca "usa una IA", solo cuenta su día.
+
+### Recorrido sugerido para el jurado
+
+| Paso | Pantalla | Qué mirar |
+| :--- | :--- | :--- |
+| 1 | [Inicio](https://punku-ideathon.vercel.app) | La promesa en una sola frase y un único camino hacia adelante. |
+| 2 | [Onboarding](https://punku-ideathon.vercel.app/onboarding) | Ella toca el micrófono y cuenta su día. Punku separa el negocio del hogar frente a sus ojos. |
+| 3 | [Perfil](https://punku-ideathon.vercel.app/perfil) | Flujo de caja, sellos de confianza con su evidencia, e hitos. |
+| 4 | Botón *Ver mi dossier* | El documento que de verdad ve un banco o un proveedor. Ese es el desbloqueo. |
+
+Está pensado para un Android de gama baja: probado a 360 px de ancho, sin desbordes y con todas las animaciones sujetas a la preferencia de menos movimiento del sistema.
 
 ---
 
@@ -92,21 +107,52 @@ No agregues animaciones excesivas. Solo una entrada orquestada al cargar el perf
 
 ---
 
-## 📁 Estructura de Carpetas Sugerida
+## 📁 Estructura del Proyecto
 
-```bash
+```
 app/
-  page.tsx                  # Landing / Onboarding
-  perfil/
-    page.tsx                # Perfil de Crecimiento (MVP)
+  page.tsx                  # Inicio
+  onboarding/page.tsx       # Los tres pasos: contar, ordenar, revelar
+  perfil/page.tsx           # Perfil de Crecimiento
+  layout.tsx                # Fuentes y avisos
+  globals.css               # Tokens OKLCH del sistema de diseno
 components/
   perfil/
-    IdentityHeader.tsx
-    CashflowCard.tsx
-    TrustSealGrid.tsx
-    SealCard.tsx
-    MilestoneTimeline.tsx
-    ExportBar.tsx
-  ui/                       # shadcn/ui components
+    IdentityHeader.tsx      # Nombre, verificacion y meses de historial
+    StatRow.tsx             # Clientes, ticket promedio y margen
+    CashflowCard.tsx        # Flujo de caja con toggle y grafico
+    SugerenciaCard.tsx      # La proxima accion sugerida
+    TrustSealGrid.tsx       # Cuadricula de sellos
+    SealCard.tsx            # Un sello, con su evidencia en tooltip
+    MilestoneTimeline.tsx   # Hitos
+    ExportBar.tsx           # Barra fija de exportacion
+    DossierSheet.tsx        # El documento que ve el banco
+  ui/                       # Primitivos al estilo shadcn/ui
 lib/
-  demo-profile.ts           # Mock data para el MVP
+  demo-profile.ts           # Data de Rosa Q. y motor determinista
+  utils.ts
+```
+
+---
+
+## ▶️ Como correrlo
+
+Necesitas Node 20 o superior y pnpm.
+
+```bash
+pnpm install
+pnpm dev
+```
+
+Abre `http://localhost:3000`. Para revisar la version de produccion:
+
+```bash
+pnpm build
+pnpm start
+```
+
+---
+
+## 🚢 Despliegue
+
+El prototipo vive en [punku-ideathon.vercel.app](https://punku-ideathon.vercel.app), desplegado en Vercel desde este repositorio. No requiere variables de entorno: toda la data del MVP es local y ficticia.
