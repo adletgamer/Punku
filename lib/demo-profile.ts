@@ -9,6 +9,16 @@
  * reglas puras y deterministas. Ningún modelo decide sobre su dinero.
  */
 
+import {
+  capitalizar,
+  diasTrabajoPor,
+  inicialDe,
+  primerNombre,
+  tipoNegocioPor,
+  type DatosOnboarding,
+  type DiaRegistrado,
+} from "./onboarding";
+
 export type Ambito = "negocio" | "hogar";
 
 export interface RegistroMensual {
@@ -58,6 +68,8 @@ export interface PerfilDemo {
   /** Cifras de cabecera que resumen el negocio de un vistazo. */
   clientesRecurrentes: number;
   ticketPromedio: number;
+  /** Cómo se cuenta cada venta: "por plato vendido", "por prenda vendida"... */
+  unidadVenta: string;
   diasActivosPorSemana: number;
   registros: RegistroMensual[];
   sellos: Sello[];
@@ -79,6 +91,7 @@ export const perfilDemo: PerfilDemo = {
   desde: "Mayo 2026",
   clientesRecurrentes: 12,
   ticketPromedio: 10,
+  unidadVenta: "por plato vendido",
   diasActivosPorSemana: 6,
 
   registros: [
@@ -263,4 +276,87 @@ export function margenNegocio(perfil: PerfilDemo = perfilDemo): number {
 /** Formato de soles peruanos, sin decimales para que se lea de un vistazo. */
 export function soles(monto: number): string {
   return `S/ ${Math.abs(Math.round(monto)).toLocaleString("es-PE")}`;
+}
+
+/* ------------------------------------------------------------------ */
+/* El perfil de la usuaria: el demo, vestido con lo que ella nos contó. */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Devuelve el perfil de demostración personalizado con los datos del
+ * onboarding. Si todavía no contó nada, devuelve el perfil tal cual:
+ * la demo nunca se queda en blanco.
+ */
+export function perfilPersonalizado(
+  datos: DatosOnboarding,
+  base: PerfilDemo = perfilDemo
+): PerfilDemo {
+  const nombre = primerNombre(datos.nombre);
+  const rubro = tipoNegocioPor(datos.tipoNegocio);
+  const dias = diasTrabajoPor(datos.diasTrabajo);
+
+  let perfil: PerfilDemo = { ...base };
+
+  if (nombre) {
+    perfil = {
+      ...perfil,
+      nombre: capitalizar(datos.nombre),
+      nombreCorto: nombre,
+      inicial: inicialDe(nombre),
+      negocio: rubro ? rubro.negocio(nombre) : `Negocio de ${nombre}`,
+    };
+  }
+
+  if (rubro) {
+    perfil = {
+      ...perfil,
+      rubro: rubro.rubro,
+      unidadVenta: rubro.unidadVenta,
+      ticketPromedio: rubro.ticketPromedio,
+    };
+  }
+
+  if (dias) {
+    perfil = { ...perfil, diasActivosPorSemana: dias.diasPorSemana };
+  }
+
+  if (datos.dia) {
+    perfil = conDiaRegistrado(perfil, datos.dia);
+  }
+
+  return perfil;
+}
+
+/**
+ * Suma el día que acaba de contar al mes en curso y le agrega el hito.
+ * Así, al volver al perfil, ve que su día efectivamente entró.
+ */
+function conDiaRegistrado(perfil: PerfilDemo, dia: DiaRegistrado): PerfilDemo {
+  const registros = perfil.registros.map((r, i) =>
+    i === perfil.registros.length - 1
+      ? {
+          ...r,
+          ingresoNegocio: r.ingresoNegocio + dia.ingresoNegocio,
+          gastoNegocio: r.gastoNegocio + dia.gastoNegocio,
+          ingresoHogar: r.ingresoHogar + dia.ingresoNegocio,
+          gastoHogar: r.gastoHogar + dia.gastoHogar,
+        }
+      : r
+  );
+
+  const hito: Hito = {
+    id: "hoy",
+    titulo: "Contaste tu día de hoy",
+    detalle: `Punku separó ${soles(dia.ingresoNegocio)} de ventas y ${soles(
+      dia.gastoNegocio + dia.gastoHogar
+    )} de gastos. Te quedaron ${soles(dia.neto)}.`,
+    fecha: "Hoy",
+    cumplido: true,
+  };
+
+  // El hito de hoy va antes de lo que todavía está en camino.
+  const cumplidos = perfil.hitos.filter((h) => h.cumplido);
+  const pendientes = perfil.hitos.filter((h) => !h.cumplido);
+
+  return { ...perfil, registros, hitos: [...cumplidos, hito, ...pendientes] };
 }

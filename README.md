@@ -13,9 +13,10 @@ Punku convierte la actividad diaria de una microempresaria informal en una **Ide
 | Paso | Pantalla | Qué mirar |
 | :--- | :--- | :--- |
 | 1 | [Inicio](https://punku-ideathon.vercel.app) | La promesa en una sola frase y un único camino hacia adelante. |
-| 2 | [Onboarding](https://punku-ideathon.vercel.app/onboarding) | Ella toca el micrófono y cuenta su día. Punku separa el negocio del hogar frente a sus ojos. |
-| 3 | [Perfil](https://punku-ideathon.vercel.app/perfil) | Flujo de caja, sellos de confianza con su evidencia, e hitos. |
-| 4 | Botón *Ver mi dossier* | El documento que de verdad ve un banco o un proveedor. Ese es el desbloqueo. |
+| 2 | [Onboarding](https://punku-ideathon.vercel.app/onboarding) | Tres preguntas: su nombre, su rubro y cuántos días abre. Lo que responde queda guardado y viste todo lo que sigue. |
+| 3 | [Cuéntame tu día](https://punku-ideathon.vercel.app/dia) | Toca el micrófono y habla. Se transcribe con la Web Speech API del navegador; si no la soporta, cae en un ejemplo real. Punku devuelve una boleta que separa el negocio del hogar. |
+| 4 | [Perfil](https://punku-ideathon.vercel.app/perfil) | Su nombre y su rubro en la cabecera, flujo de caja, sellos de confianza con su evidencia e hitos. |
+| 5 | Botón *Ver mi dossier* | El documento que de verdad ve un banco o un proveedor. Ese es el desbloqueo. |
 
 Está pensado para un Android de gama baja: probado a 360 px de ancho, sin desbordes y con todas las animaciones sujetas a la preferencia de menos movimiento del sistema.
 
@@ -112,11 +113,15 @@ No agregues animaciones excesivas. Solo una entrada orquestada al cargar el perf
 ```
 app/
   page.tsx                  # Inicio
-  onboarding/page.tsx       # Los tres pasos: contar, ordenar, revelar
+  onboarding/page.tsx       # Nombre, rubro y dias: maquina de estados de 3 pasos
+  dia/page.tsx              # Cuentame tu dia: voz, transcripcion y boleta
   perfil/page.tsx           # Perfil de Crecimiento
-  layout.tsx                # Fuentes y avisos
+  layout.tsx                # Fuentes, avisos y estado global del onboarding
   globals.css               # Tokens OKLCH del sistema de diseno
 components/
+  dia/
+    Ecualizador.tsx         # Barras que respiran mientras escucha
+    BoletaDia.tsx           # El resumen del dia con forma de boleta
   perfil/
     IdentityHeader.tsx      # Nombre, verificacion y meses de historial
     StatRow.tsx             # Clientes, ticket promedio y margen
@@ -129,7 +134,11 @@ components/
     DossierSheet.tsx        # El documento que ve el banco
   ui/                       # Primitivos al estilo shadcn/ui
 lib/
-  demo-profile.ts           # Data de Rosa Q. y motor determinista
+  demo-profile.ts           # Data de Rosa Q., motor determinista y perfil personalizado
+  onboarding.ts             # Catalogo de rubros y dias, y los tipos que comparte todo
+  onboarding-context.tsx    # Estado global (React Context) + respaldo en localStorage
+  analisis-dia.ts           # Separa el dia en movimientos de negocio y de hogar
+  use-voz.ts                # Web Speech API con simulacion de respaldo
   utils.ts
 ```
 

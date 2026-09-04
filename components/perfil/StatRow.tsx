@@ -22,7 +22,7 @@ export function StatRow({ perfil }: { perfil: PerfilDemo }) {
       icono: Receipt,
       valor: perfil.ticketPromedio,
       formato: porSoles,
-      etiqueta: "por plato vendido",
+      etiqueta: perfil.unidadVenta,
     },
     {
       icono: Percent,

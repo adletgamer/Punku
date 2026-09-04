@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "motion/react";
+import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import {
   LineChart,
   Line,
@@ -68,6 +68,7 @@ function TooltipFlujo({ active, payload, label }: TooltipProps<number, string>) 
 
 export function CashflowCard({ perfil }: { perfil: PerfilDemo }) {
   const [ambito, setAmbito] = useState<Ambito>("negocio");
+  const anima = !useReducedMotion();
   const datos = serieDeFlujo(perfil);
   const neto = netoDelMes(ambito, perfil);
   const variacion = variacionMensual(ambito, perfil);
@@ -181,6 +182,8 @@ export function CashflowCard({ perfil }: { perfil: PerfilDemo }) {
                   cursor={{ stroke: "oklch(0.66 0.014 60)", strokeDasharray: "3 3" }}
                 />
                 <Line
+                  // La llave cambia con el toggle: la línea se vuelve a trazar.
+                  key={`hogar-${ambito}`}
                   type="monotone"
                   dataKey="hogar"
                   stroke={COLOR_HOGAR}
@@ -189,9 +192,12 @@ export function CashflowCard({ perfil }: { perfil: PerfilDemo }) {
                   strokeOpacity={ambito === "hogar" ? 1 : 0.6}
                   dot={false}
                   activeDot={{ r: 4.5, strokeWidth: 2, stroke: "oklch(0.995 0.004 85)" }}
-                  isAnimationActive={false}
+                  isAnimationActive={anima}
+                  animationDuration={800}
+                  animationEasing="ease-out"
                 />
                 <Line
+                  key={`negocio-${ambito}`}
                   type="monotone"
                   dataKey="negocio"
                   stroke={COLOR_NEGOCIO}
@@ -199,7 +205,9 @@ export function CashflowCard({ perfil }: { perfil: PerfilDemo }) {
                   strokeOpacity={ambito === "negocio" ? 1 : 0.6}
                   dot={false}
                   activeDot={{ r: 4.5, strokeWidth: 2, stroke: "oklch(0.995 0.004 85)" }}
-                  isAnimationActive={false}
+                  isAnimationActive={anima}
+                  animationDuration={800}
+                  animationEasing="ease-out"
                 />
               </LineChart>
             </ResponsiveContainer>

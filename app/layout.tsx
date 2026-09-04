@@ -3,6 +3,7 @@ import { Fraunces } from "next/font/google";
 import { GeistSans } from "geist/font/sans";
 import { Toaster } from "sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { OnboardingProvider } from "@/lib/onboarding-context";
 import "./globals.css";
 
 const fraunces = Fraunces({
@@ -29,9 +30,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="es" className={`${fraunces.variable} ${GeistSans.variable}`}>
       <body className="min-h-dvh antialiased">
-        <TooltipProvider delayDuration={120} skipDelayDuration={300}>
-          {children}
-        </TooltipProvider>
+        <OnboardingProvider>
+          <TooltipProvider delayDuration={120} skipDelayDuration={300}>
+            {children}
+          </TooltipProvider>
+        </OnboardingProvider>
         <Toaster
           position="top-center"
           offset={16}
