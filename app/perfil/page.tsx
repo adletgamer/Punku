@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { IdentityHeader } from "@/components/perfil/IdentityHeader";
+import { StatRow } from "@/components/perfil/StatRow";
 import { CashflowCard } from "@/components/perfil/CashflowCard";
 import { SugerenciaCard } from "@/components/perfil/SugerenciaCard";
 import { TrustSealGrid } from "@/components/perfil/TrustSealGrid";
@@ -25,6 +26,7 @@ export default function PerfilPage() {
         <IdentityHeader perfil={perfil} />
 
         <div className="mt-7 space-y-8">
+          <StatRow perfil={perfil} />
           <CashflowCard perfil={perfil} />
           <SugerenciaCard perfil={perfil} />
           <TrustSealGrid perfil={perfil} />
