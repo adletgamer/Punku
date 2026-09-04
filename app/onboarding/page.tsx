@@ -3,26 +3,44 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "motion/react";
-import { Mic, Check, ArrowRight, Sparkles, Store, Home } from "lucide-react";
+import { motion, AnimatePresence, useReducedMotion } from "motion/react";
+import {
+  Mic,
+  Check,
+  ArrowRight,
+  Store,
+  Home,
+  CalendarCheck,
+  Users,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CountUp } from "@/components/ui/count-up";
 import { cn } from "@/lib/utils";
 import { perfilDemo, soles } from "@/lib/demo-profile";
 
 const PASOS = 3;
-
 const suave = { duration: 0.4, ease: [0.22, 1, 0.36, 1] as const };
 
-/* Lo que Rosa diría en su nota de voz, palabra por palabra. */
+/** Cuánto dura la escucha simulada, en segundos. */
+const ESCUCHA = 2.4;
+
+/* Lo que Rosa diría en su nota de voz. */
 const FRASE =
   "Hoy vendí veinte menús a diez soles, gasté sesenta en pollo y pagué la luz de la casa.";
 
 /* Lo que Punku entiende de esa frase. La matemática es determinista. */
 const EXTRAIDO = [
-  { etiqueta: "Venta de menús", monto: 200, ambito: "negocio" as const },
-  { etiqueta: "Compra de pollo", monto: -60, ambito: "negocio" as const },
-  { etiqueta: "Recibo de luz", monto: -48, ambito: "hogar" as const },
+  { etiqueta: "Venta de menús", detalle: "20 platos a S/ 10", monto: 200, ambito: "negocio" as const },
+  { etiqueta: "Compra de pollo", detalle: "Insumo del día", monto: -60, ambito: "negocio" as const },
+  { etiqueta: "Recibo de luz", detalle: "Gasto de la casa", monto: -48, ambito: "hogar" as const },
 ];
+
+const mesesDeHistorial = (n: number) => `${Math.round(n)} meses de historial`;
+
+const NETO_NEGOCIO = EXTRAIDO.filter((e) => e.ambito === "negocio").reduce(
+  (acc, e) => acc + e.monto,
+  0
+);
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -34,7 +52,7 @@ export default function OnboardingPage() {
   }, [router]);
 
   return (
-    <main className="flex min-h-dvh flex-col bg-arena">
+    <main className="flex min-h-dvh flex-col overflow-hidden bg-arena">
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-6 pb-8 pt-6">
         {/* Progreso: tres tramos, nada de porcentajes */}
         <div className="flex items-center gap-2" aria-hidden>
@@ -75,25 +93,34 @@ export default function OnboardingPage() {
   );
 }
 
+/** Entrada y salida comunes: cada paso entra por la derecha y sale por la izquierda. */
+const variantesPaso = {
+  inicial: { opacity: 0, x: 24 },
+  visible: { opacity: 1, x: 0 },
+  salida: { opacity: 0, x: -24 },
+};
+
 /* ------------------------------------------------------------------ */
 /* Paso 1: ella cuenta su día                                          */
 /* ------------------------------------------------------------------ */
 
 function PasoVoz({ onListo }: { onListo: () => void }) {
   const [estado, setEstado] = useState<"espera" | "grabando" | "transcrito">("espera");
+  const reducido = useReducedMotion();
   const palabras = FRASE.split(" ");
 
   useEffect(() => {
     if (estado !== "grabando") return;
-    const t = window.setTimeout(() => setEstado("transcrito"), 2400);
+    const t = window.setTimeout(() => setEstado("transcrito"), ESCUCHA * 1000);
     return () => window.clearTimeout(t);
   }, [estado]);
 
   return (
     <motion.section
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -12 }}
+      variants={variantesPaso}
+      initial="inicial"
+      animate="visible"
+      exit="salida"
       transition={suave}
       className="flex flex-1 flex-col pt-10"
     >
@@ -106,34 +133,73 @@ function PasoVoz({ onListo }: { onListo: () => void }) {
       </p>
 
       <div className="flex flex-1 flex-col items-center justify-center py-8">
-        <button
-          type="button"
-          onClick={() => estado === "espera" && setEstado("grabando")}
-          disabled={estado !== "espera"}
-          aria-label="Grabar una nota de voz de ejemplo"
-          className={cn(
-            "relative grid size-24 place-items-center rounded-full transition-colors duration-200",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/25 focus-visible:ring-offset-4 focus-visible:ring-offset-arena",
-            estado === "transcrito"
-              ? "bg-verdigris text-arena"
-              : "bg-cochinilla text-arena active:scale-[0.97]"
-          )}
-        >
-          {/* Aro que respira solo mientras graba */}
-          {estado === "grabando" && (
+        <div className="relative grid size-32 place-items-center">
+          {/* Aro que se llena mientras te escucha: se ve cuánto falta */}
+          <svg viewBox="0 0 100 100" className="absolute inset-0 size-full -rotate-90">
+            <circle
+              cx="50"
+              cy="50"
+              r="46"
+              fill="none"
+              strokeWidth="2.5"
+              className="stroke-ink/[0.08]"
+            />
+            {estado !== "espera" && (
+              <motion.circle
+                cx="50"
+                cy="50"
+                r="46"
+                fill="none"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                className="stroke-cochinilla"
+                initial={{ pathLength: estado === "transcrito" ? 1 : 0 }}
+                animate={{ pathLength: 1 }}
+                transition={{ duration: reducido ? 0 : ESCUCHA, ease: "linear" }}
+              />
+            )}
+          </svg>
+
+          {/* Onda que respira solo mientras graba */}
+          {estado === "grabando" && !reducido && (
             <motion.span
               aria-hidden
-              className="absolute inset-0 rounded-full border-2 border-cochinilla"
-              animate={{ scale: [1, 1.35], opacity: [0.55, 0] }}
+              className="absolute size-24 rounded-full bg-cochinilla/15"
+              animate={{ scale: [1, 1.28], opacity: [0.7, 0] }}
               transition={{ duration: 1.6, repeat: Infinity, ease: "easeOut" }}
             />
           )}
-          {estado === "transcrito" ? (
-            <Check className="size-9" strokeWidth={2.25} aria-hidden />
-          ) : (
-            <Mic className="size-9" aria-hidden />
-          )}
-        </button>
+
+          <motion.button
+            type="button"
+            onClick={() => estado === "espera" && setEstado("grabando")}
+            disabled={estado !== "espera"}
+            whileTap={{ scale: 0.94 }}
+            aria-label="Grabar una nota de voz de ejemplo"
+            className={cn(
+              "relative grid size-24 place-items-center rounded-full transition-colors duration-300",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/25 focus-visible:ring-offset-4 focus-visible:ring-offset-arena",
+              estado === "transcrito" ? "bg-verdigris text-arena" : "bg-cochinilla text-arena"
+            )}
+          >
+            <AnimatePresence mode="wait" initial={false}>
+              {estado === "transcrito" ? (
+                <motion.span
+                  key="check"
+                  initial={{ scale: 0.5, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 18 }}
+                >
+                  <Check className="size-9" strokeWidth={2.25} aria-hidden />
+                </motion.span>
+              ) : (
+                <motion.span key="mic" exit={{ scale: 0.7, opacity: 0 }}>
+                  <Mic className="size-9" aria-hidden />
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </motion.button>
+        </div>
 
         <p className="mt-5 h-5 text-sm text-tinta-suave">
           {estado === "espera" && "Toca para hablar"}
@@ -146,15 +212,18 @@ function PasoVoz({ onListo }: { onListo: () => void }) {
           {Array.from({ length: 9 }).map((_, i) => (
             <motion.span
               key={i}
-              className="w-1 rounded-full bg-cochinilla/45"
+              className={cn(
+                "w-1 rounded-full transition-colors duration-300",
+                estado === "transcrito" ? "bg-verdigris/40" : "bg-cochinilla/45"
+              )}
               animate={
-                estado === "grabando"
-                  ? { height: [6, 22 - Math.abs(4 - i) * 2.5, 6] }
+                estado === "grabando" && !reducido
+                  ? { height: [6, 24 - Math.abs(4 - i) * 3, 6] }
                   : { height: 6 }
               }
               transition={{
-                duration: 0.85,
-                repeat: estado === "grabando" ? Infinity : 0,
+                duration: 0.8,
+                repeat: estado === "grabando" && !reducido ? Infinity : 0,
                 delay: i * 0.07,
                 ease: "easeInOut",
               }}
@@ -174,11 +243,12 @@ function PasoVoz({ onListo }: { onListo: () => void }) {
               {palabras.map((palabra, i) => (
                 <motion.span
                   key={i}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: i * 0.045, duration: 0.2 }}
+                  className="inline-block"
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.05, duration: 0.25, ease: "easeOut" }}
                 >
-                  {palabra}{" "}
+                  {palabra}&nbsp;
                 </motion.span>
               ))}
             </motion.p>
@@ -191,7 +261,7 @@ function PasoVoz({ onListo }: { onListo: () => void }) {
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ ...suave, delay: 0.8 }}
+            transition={{ ...suave, delay: 0.9 }}
           >
             <Button onClick={onListo} size="lg" className="w-full">
               Continuar
@@ -211,16 +281,34 @@ function PasoVoz({ onListo }: { onListo: () => void }) {
 function PasoOrden({ onListo }: { onListo: () => void }) {
   const [listo, setListo] = useState(false);
 
+  const grupos = [
+    {
+      clave: "negocio" as const,
+      titulo: "Lo del negocio",
+      icono: Store,
+      items: EXTRAIDO.filter((e) => e.ambito === "negocio"),
+    },
+    {
+      clave: "hogar" as const,
+      titulo: "Lo de la casa",
+      icono: Home,
+      items: EXTRAIDO.filter((e) => e.ambito === "hogar"),
+    },
+  ];
+
   useEffect(() => {
-    const t = window.setTimeout(() => setListo(true), 1500);
+    const t = window.setTimeout(() => setListo(true), 1600);
     return () => window.clearTimeout(t);
   }, []);
 
+  let indiceGlobal = 0;
+
   return (
     <motion.section
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -12 }}
+      variants={variantesPaso}
+      initial="inicial"
+      animate="visible"
+      exit="salida"
       transition={suave}
       className="flex flex-1 flex-col pt-10"
     >
@@ -231,58 +319,82 @@ function PasoOrden({ onListo }: { onListo: () => void }) {
         Esto es lo que entendí. Si algo no cuadra, siempre lo puedes corregir.
       </p>
 
-      <ul className="mt-8 space-y-2.5">
-        {EXTRAIDO.map((item, i) => {
-          const esNegocio = item.ambito === "negocio";
-          const Icono = esNegocio ? Store : Home;
+      <div className="mt-7 space-y-5">
+        {grupos.map((grupo, g) => {
+          const Icono = grupo.icono;
           return (
-            <motion.li
-              key={item.etiqueta}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ ...suave, delay: 0.15 + i * 0.18 }}
-              className="flex items-center gap-3 rounded-tarjeta border border-hairline bg-papel px-4 py-3"
-            >
-              <span
-                className={cn(
-                  "grid size-9 shrink-0 place-items-center rounded-full",
-                  esNegocio ? "bg-ocre-tenue text-ocre-hondo" : "bg-ink/[0.055] text-tinta-suave"
-                )}
+            <div key={grupo.clave}>
+              <motion.div
+                initial={{ opacity: 0, x: -6 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ ...suave, delay: g * 0.5 }}
+                className="mb-2 flex items-center gap-2"
               >
-                <Icono className="size-4" aria-hidden />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-medium text-ink">
-                  {item.etiqueta}
-                </span>
-                <span className="block text-xs text-tinta-tenue">
-                  {esNegocio ? "Negocio" : "Hogar"}
-                </span>
-              </span>
-              <span
-                className={cn(
-                  "cifra shrink-0 text-sm font-semibold",
-                  item.monto > 0 ? "text-verdigris" : "text-ink"
-                )}
-              >
-                {item.monto > 0 ? "+" : "-"}
-                {soles(item.monto)}
-              </span>
-            </motion.li>
+                <Icono
+                  className={cn(
+                    "size-3.5",
+                    grupo.clave === "negocio" ? "text-ocre-hondo" : "text-tinta-tenue"
+                  )}
+                  aria-hidden
+                />
+                <h2 className="text-[0.7rem] font-semibold uppercase tracking-[0.12em] text-tinta-tenue">
+                  {grupo.titulo}
+                </h2>
+                <span className="h-px flex-1 bg-hairline" />
+              </motion.div>
+
+              <ul className="space-y-2">
+                {grupo.items.map((item) => {
+                  const i = indiceGlobal++;
+                  const entra = item.monto > 0;
+                  return (
+                    <motion.li
+                      key={item.etiqueta}
+                      initial={{ opacity: 0, y: 16, scale: 0.97 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      transition={{
+                        delay: 0.25 + i * 0.35,
+                        duration: 0.45,
+                        ease: [0.22, 1, 0.36, 1],
+                      }}
+                      className="flex items-center gap-3 rounded-tarjeta border border-hairline bg-papel px-4 py-3"
+                    >
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-medium text-ink">
+                          {item.etiqueta}
+                        </span>
+                        <span className="block text-xs text-tinta-tenue">{item.detalle}</span>
+                      </span>
+                      <span
+                        className={cn(
+                          "cifra shrink-0 text-sm font-semibold",
+                          entra ? "text-verdigris" : "text-ink"
+                        )}
+                      >
+                        {entra ? "+" : "−"}
+                        {soles(item.monto)}
+                      </span>
+                    </motion.li>
+                  );
+                })}
+              </ul>
+            </div>
           );
         })}
-      </ul>
+      </div>
 
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: listo ? 1 : 0 }}
+        initial={{ opacity: 0, y: 10 }}
+        animate={listo ? { opacity: 1, y: 0 } : {}}
         transition={suave}
-        className="mt-6 rounded-tarjeta bg-ocre-tenue/60 px-4 py-3.5"
+        className="mt-6 rounded-tarjeta bg-ocre-tenue/70 px-4 py-4"
       >
-        <p className="text-sm leading-snug text-ink">
-          Tu negocio dejó{" "}
-          <strong className="cifra font-semibold">{soles(140)}</strong> hoy. Eso es
-          lo que de verdad te quedó, sin mezclar con la casa.
+        <p className="text-xs text-ocre-hondo">Tu negocio dejó hoy</p>
+        <p className="cifra mt-1 font-display text-3xl font-semibold leading-none text-ink">
+          {listo ? <CountUp valor={NETO_NEGOCIO} formato={soles} /> : soles(0)}
+        </p>
+        <p className="mt-2 text-xs leading-snug text-ink/75">
+          Eso es lo que de verdad te quedó, sin mezclar con la casa.
         </p>
       </motion.div>
 
@@ -292,7 +404,7 @@ function PasoOrden({ onListo }: { onListo: () => void }) {
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={suave}
+              transition={{ ...suave, delay: 0.4 }}
             >
               <Button onClick={onListo} size="lg" className="w-full">
                 Continuar
@@ -311,27 +423,46 @@ function PasoOrden({ onListo }: { onListo: () => void }) {
 /* ------------------------------------------------------------------ */
 
 function PasoListo() {
+  const reducido = useReducedMotion();
+  const sellos = perfilDemo.sellos.filter((s) => s.desbloqueado);
+  const iconos = { calendario: CalendarCheck, clientes: Users } as const;
+
   return (
     <motion.section
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -12 }}
+      variants={variantesPaso}
+      initial="inicial"
+      animate="visible"
+      exit="salida"
       transition={suave}
       className="flex flex-1 flex-col items-center justify-center py-10 text-center"
     >
-      <motion.span
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ type: "spring", stiffness: 260, damping: 20 }}
-        className="grid size-20 place-items-center rounded-full bg-ocre-tenue text-ocre-hondo ring-1 ring-ocre/40"
-      >
-        <Sparkles className="size-8" aria-hidden />
-      </motion.span>
+      <div className="relative grid size-24 place-items-center">
+        {/* Un solo pulso al llegar, no un latido permanente */}
+        {!reducido && (
+          <motion.span
+            aria-hidden
+            className="absolute size-20 rounded-full bg-ocre/25"
+            initial={{ scale: 0.8, opacity: 0.8 }}
+            animate={{ scale: 1.7, opacity: 0 }}
+            transition={{ duration: 1.1, ease: "easeOut", delay: 0.15 }}
+          />
+        )}
+        <motion.span
+          initial={{ scale: 0.75, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 280, damping: 18 }}
+          className="grid size-20 place-items-center rounded-full bg-ocre-tenue ring-1 ring-ocre/40"
+        >
+          <span className="font-display text-3xl font-semibold text-ocre-hondo">
+            {perfilDemo.inicial}
+          </span>
+        </motion.span>
+      </div>
 
       <motion.h1
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ ...suave, delay: 0.15 }}
+        transition={{ ...suave, delay: 0.2 }}
         className="mt-7 font-display text-[1.9rem] leading-tight text-ink"
       >
         Tu perfil está listo.
@@ -340,18 +471,49 @@ function PasoListo() {
       <motion.p
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ ...suave, delay: 0.25 }}
+        transition={{ ...suave, delay: 0.3 }}
         className="mt-3 max-w-[20rem] text-[0.98rem] leading-relaxed text-tinta-suave"
       >
-        Con {perfilDemo.mesesDeHistorial} meses de historial, tus sellos de
-        confianza y tus cifras ordenadas. Todo esto ya era tuyo, ahora se puede
-        mostrar.
+        Todo esto ya era tuyo. Ahora se puede mostrar.
       </motion.p>
+
+      {/* Los sellos ya ganados aterrizan uno por uno */}
+      <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
+        <motion.span
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ ...suave, delay: 0.45 }}
+          className="inline-flex items-center gap-1.5 rounded-full bg-ink/[0.055] px-3 py-1.5 text-xs font-medium text-ink"
+        >
+          <CountUp
+            valor={perfilDemo.mesesDeHistorial}
+            formato={mesesDeHistorial}
+            retraso={0.5}
+            className="cifra"
+          />
+        </motion.span>
+
+        {sellos.map((sello, i) => {
+          const Icono = iconos[sello.icono as keyof typeof iconos] ?? CalendarCheck;
+          return (
+            <motion.span
+              key={sello.id}
+              initial={{ opacity: 0, scale: 0.9, y: 6 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ ...suave, delay: 0.55 + i * 0.12 }}
+              className="inline-flex items-center gap-1.5 rounded-full bg-ocre-tenue px-3 py-1.5 text-xs font-medium text-ocre-hondo"
+            >
+              <Icono className="size-3.5" aria-hidden />
+              {sello.nombre}
+            </motion.span>
+          );
+        })}
+      </div>
 
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ ...suave, delay: 0.35 }}
+        transition={{ ...suave, delay: 0.8 }}
         className="mt-10 w-full"
       >
         <Button asChild size="lg" className="w-full">

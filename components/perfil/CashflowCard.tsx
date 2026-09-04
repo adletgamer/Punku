@@ -14,6 +14,7 @@ import {
 } from "recharts";
 import { TrendingUp, TrendingDown } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { CountUp } from "@/components/ui/count-up";
 import { cn } from "@/lib/utils";
 import {
   serieDeFlujo,
@@ -120,7 +121,7 @@ export function CashflowCard({ perfil }: { perfil: PerfilDemo }) {
               transition={{ duration: 0.22, ease: "easeOut" }}
               className="cifra mt-1 font-display text-[2.65rem] font-semibold leading-none text-ink"
             >
-              {soles(neto)}
+              <CountUp valor={neto} formato={soles} />
             </motion.p>
           </AnimatePresence>
 

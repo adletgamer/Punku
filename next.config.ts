@@ -1,10 +1,11 @@
-import path from "node:path";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-  // Hay otros lockfiles en el equipo; fijamos la raiz para que Next no dude.
-  outputFileTracingRoot: path.join(__dirname),
+  // En esta maquina hay varios lockfiles y Next dudaba de cual era la raiz.
+  // process.cwd() es la raiz del proyecto tanto al compilar aqui como en la nube,
+  // y a diferencia de __dirname existe igual en CommonJS y en modulos ES.
+  outputFileTracingRoot: process.cwd(),
 };
 
 export default nextConfig;

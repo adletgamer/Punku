@@ -55,6 +55,10 @@ export interface PerfilDemo {
   verificado: boolean;
   mesesDeHistorial: number;
   desde: string;
+  /** Cifras de cabecera que resumen el negocio de un vistazo. */
+  clientesRecurrentes: number;
+  ticketPromedio: number;
+  diasActivosPorSemana: number;
   registros: RegistroMensual[];
   sellos: Sello[];
   hitos: Hito[];
@@ -73,6 +77,9 @@ export const perfilDemo: PerfilDemo = {
   verificado: true,
   mesesDeHistorial: 4,
   desde: "Mayo 2026",
+  clientesRecurrentes: 12,
+  ticketPromedio: 10,
+  diasActivosPorSemana: 6,
 
   registros: [
     {
@@ -136,6 +143,16 @@ export const perfilDemo: PerfilDemo = {
       desbloqueado: false,
       requisito: "Guardar S/ 600 y mantenerlos durante 2 meses seguidos. Ya lleva S/ 390.",
       avance: 0.65,
+    },
+    {
+      id: "proveedor",
+      nombre: "Trato directo",
+      descripcion: "Compra al por mayor y negocia mejores precios.",
+      icono: "proveedor",
+      desbloqueado: false,
+      requisito:
+        "Registrar 3 compras seguidas al mismo proveedor. Ya lleva 1 de 3.",
+      avance: 0.33,
     },
   ],
 
@@ -224,6 +241,23 @@ export function promedioMensual(ambito: Ambito, perfil: PerfilDemo = perfilDemo)
   const serie = serieDeFlujo(perfil);
   const suma = serie.reduce((acc, p) => acc + (ambito === "negocio" ? p.negocio : p.hogar), 0);
   return Math.round(suma / serie.length);
+}
+
+/** Ingresos y gastos del negocio en el último mes cerrado. */
+export function ultimoMes(perfil: PerfilDemo = perfilDemo) {
+  const r = perfil.registros[perfil.registros.length - 1];
+  return {
+    ...r,
+    netoNegocio: r.ingresoNegocio - r.gastoNegocio,
+    netoHogar: r.ingresoHogar - r.gastoHogar,
+  };
+}
+
+/** Margen del negocio en el último mes, en porcentaje entero. */
+export function margenNegocio(perfil: PerfilDemo = perfilDemo): number {
+  const r = ultimoMes(perfil);
+  if (r.ingresoNegocio === 0) return 0;
+  return Math.round((r.netoNegocio / r.ingresoNegocio) * 100);
 }
 
 /** Formato de soles peruanos, sin decimales para que se lea de un vistazo. */

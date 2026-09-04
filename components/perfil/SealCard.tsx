@@ -10,6 +10,14 @@ import {
 import { cn } from "@/lib/utils";
 import type { Sello } from "@/lib/demo-profile";
 
+/** Cuenta el avance sin números fríos y sin prometer de más. */
+function cuantoFalta(avance?: number): string {
+  if (typeof avance !== "number") return "Por conseguir";
+  if (avance >= 0.6) return "Ya casi";
+  if (avance >= 0.3) return "Vas por buen camino";
+  return "Recién empieza";
+}
+
 const ICONOS = {
   calendario: CalendarCheck,
   clientes: Users,
@@ -66,7 +74,7 @@ export function SealCard({ sello, indice }: { sello: Sello; indice: number }) {
               logrado ? "text-ocre-hondo" : "text-tinta-tenue"
             )}
           >
-            {logrado ? sello.fechaLogro : "Te falta poco"}
+            {logrado ? sello.fechaLogro : cuantoFalta(sello.avance)}
           </span>
 
           {/* Barra de avance solo cuando el sello aún no está conseguido */}
