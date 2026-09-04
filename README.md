@@ -1,6 +1,6 @@
-# Punku 🔓
+# Punku 
 
-**Tu negocio ya tiene historia. Vamos a hacerla visible.**
+**Tu negocio ya tiene historia. Nosotros te ayudamos a hacerla visible.**
 
 [![Ver el prototipo en vivo](https://img.shields.io/badge/Ver%20el%20prototipo%20en%20vivo-punku--ideathon.vercel.app-b22c3f?style=for-the-badge)](https://punku-ideathon.vercel.app)
 
