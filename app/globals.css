@@ -1,0 +1,100 @@
+@import "tailwindcss";
+
+@theme {
+  /* ---------- Paleta Punku: cálida, terrosa, artesanal ---------- */
+  --color-arena: oklch(0.97 0.010 80);
+  --color-arena-hondo: oklch(0.94 0.016 78);
+  --color-papel: oklch(0.995 0.004 85);
+  --color-ink: oklch(0.24 0.015 50);
+  --color-tinta-suave: oklch(0.52 0.018 55);
+  --color-tinta-tenue: oklch(0.66 0.014 60);
+  --color-cochinilla: oklch(0.51 0.170 18);
+  --color-cochinilla-hondo: oklch(0.44 0.160 18);
+  --color-cochinilla-tenue: oklch(0.94 0.030 20);
+  --color-ocre: oklch(0.74 0.120 78);
+  --color-ocre-hondo: oklch(0.58 0.110 74);
+  --color-ocre-tenue: oklch(0.95 0.038 82);
+  --color-verdigris: oklch(0.55 0.060 195);
+  --color-verdigris-tenue: oklch(0.94 0.022 195);
+  --color-hogar: oklch(0.46 0.016 58);
+  --color-hogar-tenue: oklch(0.93 0.006 60);
+  --color-ocre-linea: oklch(0.655 0.142 76);
+  --color-hairline: oklch(0.89 0.012 75);
+  --color-candado: oklch(0.90 0.006 70);
+
+  /* ---------- Tipografía ---------- */
+  --font-display: var(--font-fraunces), "Iowan Old Style", Georgia, serif;
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+
+  /* ---------- Punto de quiebre extra para pantallas muy chicas ---------- */
+  --breakpoint-xs: 22.5rem;
+
+  /* ---------- Radios ---------- */
+  --radius-suave: 0.875rem;
+  --radius-tarjeta: 1.25rem;
+
+  /* ---------- Micro-interacciones ---------- */
+  --animate-surgir: surgir 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-latido: latido 1.8s ease-in-out infinite;
+
+  @keyframes surgir {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes latido {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.45; }
+  }
+}
+
+@layer base {
+  * {
+    border-color: var(--color-hairline);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-arena);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overscroll-behavior-y: none;
+  }
+
+  h1, h2, h3 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: -0.015em;
+  }
+
+  /* Números tabulares para que las cifras no bailen al animarse */
+  .cifra {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+  }
+
+  button, a {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  ::selection {
+    background-color: var(--color-ocre-tenue);
+    color: var(--color-ink);
+  }
+}
+
+@layer utilities {
+  /* Respeto por gama baja: si el equipo pide menos movimiento, se lo damos */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+    }
+  }
+}
